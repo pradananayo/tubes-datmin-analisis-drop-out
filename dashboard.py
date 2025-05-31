@@ -14,21 +14,17 @@ st.title("Dashboard Prediksi Drop Out / Lulus Mahasiswa Menggunakan Naive Bayes"
 @st.cache_data
 def load_data():
     df = pd.read_csv("dataset_kelulusan_mahasiswa.csv")
-    # Batas jumlah semester maksimal 14
     df['Jumlah Semester'] = df['Jumlah Semester'].clip(upper=14)
-    # Encode biner
     df['Pekerjaan Sambil Kuliah'] = df['Pekerjaan Sambil Kuliah'].map({'Ya': 1, 'Tidak': 0})
-    # Encode target
     df['Status Kelulusan'] = df['Status Kelulusan'].map({'Lulus': 0, 'Drop Out': 1})
-    # Kolom-kolom numerik lainnya tetap
     return df
 
 df = load_data()
 
-# --- FITUR & TARGET
-features = ['IPK', 'Mata Kuliah Tidak Lulus', 'Jumlah Cuti Akademik', 
+# --- FITUR & TARGET ---
+features = ['IPK', 'Mata Kuliah Tidak Lulus', 'Jumlah Cuti Akademik',
             'IPS Rata-rata', 'Pekerjaan Sambil Kuliah', 'Jumlah Semester', 'IPS Tren']
-features = [f for f in features if f in df.columns] 
+features = [f for f in features if f in df.columns]
 X = df[features]
 y = df['Status Kelulusan']
 
@@ -49,11 +45,13 @@ with st.form("prediksi_form"):
     kerja = st.selectbox("Pekerjaan Sambil Kuliah", options=["Tidak", "Ya"])
     kerja_enc = 1 if kerja == "Ya" else 0
     jml_semester = st.number_input("Jumlah Semester", min_value=1, max_value=14, value=8)
+
     if 'IPS Tren' in features:
-        ips_tren = st.number_input("IPS Tren", min_value=-2.0, max_value=2.0, value=0.0, step=0.01)
+        ips_tren = st.number_input("IPS Tren", value=0.0, step=0.01)
         data_pred = np.array([[ipk, mknl, cuti, ips_rata, kerja_enc, jml_semester, ips_tren]])
     else:
         data_pred = np.array([[ipk, mknl, cuti, ips_rata, kerja_enc, jml_semester]])
+
     submitted = st.form_submit_button("Prediksi")
 
 if submitted:
@@ -98,7 +96,7 @@ with st.expander("Lihat ROC Curve"):
     fpr, tpr, thresholds = roc_curve(y_test, y_proba)
     fig_roc, ax = plt.subplots()
     ax.plot(fpr, tpr, label=f'ROC Curve (AUC = {roc_auc:.2f}%)')
-    ax.plot([0,1], [0,1], 'k--', label='Random Guess')
+    ax.plot([0, 1], [0, 1], 'k--', label='Random Guess')
     ax.set_xlabel('False Positive Rate')
     ax.set_ylabel('True Positive Rate')
     ax.set_title('ROC Curve - Naive Bayes')
